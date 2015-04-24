@@ -26,7 +26,7 @@
                     <input type='text' id="leds_per_lantern" value="4"/><br/>
                 </div>
                 <div class="pure-controls">
-                    <div class='pure-button' onclick="animate_sequence()">RENDER</div>
+                    <div class='pure-button' id='animate' onclick="button_handler()">ANIMATE</div>
                 </div>
             </fieldset>
         </form>
@@ -107,9 +107,9 @@ Milliseconds HexColorHexColorHexColor" rows="10" wrap="off">
         </form>
 
         <script type="text/javascript">
+$0 = function(id){return document.getElementById(id);}
 var sequence
-var sequence_lines
-var canvas = $('#canvas')[0];
+var canvas = $0('canvas');
 var radius = canvas.width * 0.4;
 var lantern_radius = radius/10;
 var number_of_lanterns;
@@ -117,7 +117,8 @@ var leds_per_lantern;
 var cx = canvas.width / 2;
 var cy = canvas.height / 2;
 
-$('#sequence')[0].value = lines($('#sequence')[0].value).join('\n');
+
+$0('sequence').value = lines($0('sequence').value).join('\n');
 
 function lines(str){
     var str_lines=str.split('\n')
@@ -155,8 +156,8 @@ function lantern(canvas, x, y, colors){
 }
 
 function render(colors){
-    number_of_lanterns = $("#number_of_lanterns")[0].value;
-    leds_per_lantern = $("#leds_per_lantern")[0].value;
+    number_of_lanterns = $0("number_of_lanterns").value;
+    leds_per_lantern = $0("leds_per_lantern").value;
     for(var i = 0; i < number_of_lanterns; i++){
         var angle = i * 2 * Math.PI/number_of_lanterns;
         var x = cx + Math.cos(angle) * radius;
@@ -165,22 +166,42 @@ function render(colors){
     }
 }
 
-function animate_sequence(){
-    sequence = $("#sequence")[0].value;
-    sequence_lines = lines(sequence);
-    console.log(animation());
+function sequence_generator(){
+    if (typeof(sequence_generator.lines) == 'undefined' || sequence_generator.lines.length == 0){
+        sequence_generator.lines = lines(sequence);
+    }
+    var frame = sequence_generator.lines.splice(0,1)[0].split(' ');  // 0:duration, 1:colors
+    return {duration: frame[0], colors: frame[1]};
 }
 
 function animation(){
-    var frame = sequence_lines.splice(0,1)[0];
-    frame = frame.split(' ');  // 0:duration, 1:colors
-    render({value: frame[1]});
-    if(sequence_lines.length > 0){
-        setTimeout(animation, frame[0]);
+    var frame = sequence_generator()
+    render({value: frame.colors});
+    if(animation.action == 'play'){
+        setTimeout(animation, frame.duration);
     }
     return 'animation done';
 }
 
+function start_animation(){
+    animation.action = 'play';
+    sequence = $0("sequence").value;
+    console.log(animation());
+}
+
+function stop_animation(){
+    animation.action = 'stop';
+}
+
+function button_handler(){
+    if($0('animate').innerText == 'ANIMATE'){
+        $0('animate').innerText = 'STOP';
+        start_animation()
+    }else{
+        $0('animate').innerText = 'ANIMATE';
+        stop_animation();
+    }
+}
 //setTimeout(function(){color_all(ctx, "#666666");}, 2000)
 
 // Display color picker
