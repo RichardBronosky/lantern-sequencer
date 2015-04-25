@@ -41,7 +41,13 @@
                 <div class="pure-control-group">
                     <label for="function">Generator Function:</label>
                     <textarea id="function" class="pure-input-1" rows="10" wrap="off" placeholder="function(){
-    this.next = function(){ return for(var word = '100 '; word.length < 4 + 64 * 2; word += '00'){}; }
+    this.toggle = -1
+    this.next = function(){
+        this.toggle *= -1;
+        var color = (this.toggle > 0) ? 'AA' : '66';
+        for(var frame = ''; frame.length < 64 * 3 * 2; frame += color){};
+        return {duration: 200, colors: frame};
+    }
 }"></textarea>
                 </div>
                 <div class="pure-control-group">
@@ -269,6 +275,29 @@ generators['Swirly Generator'] = function(){
             frame += (i == this.index) ? this.red : this.blue;
         }
         return {duration: 50, colors: frame};
+    }
+}
+
+generators['Crash Test Generator'] = function(){
+    this.toggle = -1
+    this.next = function(){
+        for(var frame = ''; frame.length < 64 * 3 * 2;){
+            this.toggle *= -1;
+            var color = (this.toggle > 0) ? 'cc' : '33';
+            frame += color
+        };
+            this.toggle *= -1;
+        return {duration: 100, colors: frame};
+    }
+}
+
+generators['Flash Generator'] = function(){
+    this.toggle = -1
+    this.next = function(){
+        this.toggle *= -1;
+        var color = (this.toggle > 0) ? 'AA' : '66';
+        for(var frame = ''; frame.length < 64 * 3 * 2; frame += color){};
+        return {duration: 200, colors: frame};
     }
 }
 
