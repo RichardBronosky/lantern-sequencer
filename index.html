@@ -191,9 +191,9 @@ function led(canvas, x, y, start, end, color){
     ctx.fill();
 }
 
-function lantern(canvas, x, y, colors){
+function lantern(canvas, x, y, angle, colors){
     for(var i = 0; i < leds_per_lantern; i++){
-        var start = i/leds_per_lantern * 2 * Math.PI
+        var start = angle + i/leds_per_lantern * 2 * Math.PI
             var end = start - 1/leds_per_lantern * 2 * Math.PI
             led(canvas, x, y, start, end, bytes(colors,3).next);
     }
@@ -204,7 +204,7 @@ function render(colors){
         var angle = i * 2 * Math.PI/number_of_lanterns;
         var x = cx + Math.cos(angle) * formation_radius;
         var y = cy + Math.sin(angle) * formation_radius;
-        lantern(canvas, x, y, colors);
+        lantern(canvas, x, y, angle, colors);
     }
 }
 
