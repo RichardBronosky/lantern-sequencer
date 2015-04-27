@@ -193,7 +193,7 @@ function led(canvas, x, y, start, end, color){
 
 function lantern(canvas, x, y, angle, colors){
     for(var i = 0; i < leds_per_lantern; i++){
-        var start = angle + i/leds_per_lantern * 2 * Math.PI
+        var start = angle + i/leds_per_lantern * 2 * Math.PI + Math.PI /4
             var end = start - 1/leds_per_lantern * 2 * Math.PI
             led(canvas, x, y, start, end, bytes(colors,3).next);
     }
@@ -298,6 +298,20 @@ generators['Flash Generator'] = function(){
         var color = (this.toggle > 0) ? 'AA' : '66';
         for(var frame = ''; frame.length < 64 * 3 * 2; frame += color){};
         return {duration: 200, colors: frame};
+    }
+}
+
+generators['Rainbow Generator'] = function(){
+    this.frames = [
+        "a500ff8b00ffa600ffbf00ff3900ff2100ff3900ff5200ff0000ff0000ff0000ff0000ff0074ff0094ff0075ff0053ff00e9ff00faff00e7ff00d0ff00ffcf00ffb800ffd100ffe600ff5e00ff3f00ff5e00ff7c00ff0000ff0000ff0000ff002eff004eff002dff0000ff00adff00c8ff00adff0090ff00fffe00ffed00fffe00f5ff00ff9c00ff7d00ff9c00ffb800ff2200ff0400ff2200ff3c00ff001aff003eff001cff0000ff00a7ff00c6ff00a7ff0087fd00ffed00fffd00ffff00f9",
+        "6e00ff5400ff6e00ff8a00ff0700ff0000ff0700ff1e00ff002dff0050ff002eff0000ff00b4ff00cfff00b4ff0096ff00fff700ffe700fff800fbff00ff9b00ff7e00ff9b00ffb600ff1000ff0000ff1000ff3c00ff0000ff0000ff0000ff0070ff008eff006fff0051ff00e2ff00f3ff00e2ff00caff00ffd600ffba00ffd600ffec00ff5c00ff3f00ff5c00ff7b00ff0000ff0000ff0000ff0400ff0062ff0083ff0062ff0040ff00e2ff00f9ff00e2ff00c7d800ffc100ffd900ffec00ff"
+    ]
+    this.toggle = -1
+    this.next = function(){
+        this.toggle *= -1;
+        var index = (this.toggle > 0) ? 0 : 1;
+        this.frames[index] = this.frames[index].slice(24) + this.frames[index].slice(0,24)
+        return {duration: 25, colors: this.frames[index]};
     }
 }
 
