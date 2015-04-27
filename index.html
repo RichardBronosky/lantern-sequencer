@@ -160,9 +160,19 @@ $(function(){
         }
     }
     select.change(toggle);
+    prepare_select_box()
     toggle({target: select});
     console.log(keys);
 })
+
+function prepare_select_box(){
+    $('#generators option').each(function(){
+        var hash = document.location.hash.slice(1);
+        if($(this).val() == hash){
+            $('#generators').val(hash).change();
+        }
+    })
+}
 
 function lines(str){
     var str_lines=str.split('\n')
@@ -307,10 +317,15 @@ generators['Rainbow Generator'] = function(){
         "6e00ff5400ff6e00ff8a00ff0700ff0000ff0700ff1e00ff002dff0050ff002eff0000ff00b4ff00cfff00b4ff0096ff00fff700ffe700fff800fbff00ff9b00ff7e00ff9b00ffb600ff1000ff0000ff1000ff3c00ff0000ff0000ff0000ff0070ff008eff006fff0051ff00e2ff00f3ff00e2ff00caff00ffd600ffba00ffd600ffec00ff5c00ff3f00ff5c00ff7b00ff0000ff0000ff0000ff0400ff0062ff0083ff0062ff0040ff00e2ff00f9ff00e2ff00c7d800ffc100ffd900ffec00ff"
     ]
     this.toggle = -1
+    this.direction = -1;
+    // In order to reverse direction, you must pre-cycle the 2nd frame once.
+    if(this.direction < 0){
+        this.frames[1] = this.frames[1].slice(24 * this.direction) + this.frames[1].slice(0,24 * this.direction)
+    }
     this.next = function(){
         this.toggle *= -1;
         var index = (this.toggle > 0) ? 0 : 1;
-        this.frames[index] = this.frames[index].slice(24) + this.frames[index].slice(0,24)
+        this.frames[index] = this.frames[index].slice(24 * this.direction) + this.frames[index].slice(0,24 * this.direction)
         return {duration: 25, colors: this.frames[index]};
     }
 }
