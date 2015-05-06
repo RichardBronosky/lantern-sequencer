@@ -148,6 +148,7 @@ $(function(){
         var val = $(e.target).val();
         var func = $('#function')
         var sequ = $('#sequence')
+        document.location.hash='#' + encodeURIComponent(val)
         if(val.search("Sequence") > -1){
             animation.generator_type = 'sequence';
             sequ.parent().show()
@@ -167,7 +168,7 @@ $(function(){
 
 function prepare_select_box(){
     $('#generators option').each(function(){
-        var hash = document.location.hash.slice(1);
+        var hash = decodeURIComponent(document.location.hash.slice(1));
         if($(this).val() == hash){
             $('#generators').val(hash).change();
         }
@@ -327,6 +328,146 @@ generators['Rainbow Generator'] = function(){
         var index = (this.toggle > 0) ? 0 : 1;
         this.frames[index] = this.frames[index].slice(24 * this.direction) + this.frames[index].slice(0,24 * this.direction)
         return {duration: 25, colors: this.frames[index]};
+    }
+}
+
+generators['Rainbow Generator 2'] = function(){
+    // NOTE: This uses the neopixel wheel function.
+    // It doesn't produce true yellow because the 3 channel fade cross in the middle.
+    // I am working on a solution to this in "Rainbow Generator 3".
+    this.index = 0;
+    this.start = 0;
+console.log('setting index to 0.');
+    this.next = function(){
+        var out = "";
+        var color = "";
+        var points = [];
+        for(var i=0; i < number_of_lanterns; i++){
+            points[i] = this.start + (this.index+i * 16);
+            if(points[i] > 255){
+                points[i] = points[i] - 255;
+            }
+            color = wheel(points[i]);
+            out = out + color+color+color+color;
+        }
+console.log(points);
+console.log(this.index, out);
+        if(this.index < number_of_lanterns){
+            this.index = this.index + 1;
+        }else{
+            this.index = 0;
+            this.start = (this.start < 255 - 16) ? this.start + 16 : 0;
+        }
+        return {duration: 10, colors: out};
+    }
+}
+
+generators['Rainbow Generator 3'] = function(){
+    // NOTE: This is a work in progress.
+    // The 6 phase wheel2 function is not ready yet, so this will fail.
+    // See "Rainbow Generator 2" for more details.
+    this.index = 0;
+    this.start = 0;
+console.log('setting index to 0.');
+    this.next = function(){
+        var out = "";
+        var color = "";
+        var points = [];
+        for(var i=0; i < number_of_lanterns; i++){
+            points[i] = this.start + (this.index+i * 16);
+            if(points[i] > 255){
+                points[i] = points[i] - 255;
+            }
+            color = wheel2(points[i]);
+            out = out + color+color+color+color;
+        }
+console.log(points);
+console.log(this.index, out);
+        if(this.index < number_of_lanterns){
+            this.index = this.index + 1;
+        }else{
+            this.index = 0;
+            this.start = (this.start < 255 - 16) ? this.start + 16 : 0;
+        }
+        return {duration: 250, colors: out};
+    }
+}
+
+function rgb(r, g, b){
+    r = ("00" + r.toString(16)).slice(-2);
+    g = ("00" + g.toString(16)).slice(-2);
+    b = ("00" + b.toString(16)).slice(-2);
+    return r+g+b;
+}
+
+function wheel(wheelPos){
+    wheelPos = 255 - wheelPos;
+    if(wheelPos < 85) {
+        return rgb(255 - wheelPos * 3, 0, wheelPos * 3);
+    } else if(wheelPos < 170) {
+        wheelPos -= 85;
+        return rgb(0, wheelPos * 3, 255 - wheelPos * 3);
+    } else {
+        wheelPos -= 170;
+        return rgb(wheelPos * 3, 255 - wheelPos * 3, 0);
+    }
+}
+
+function wheel2(position){
+    // 6 phases for each color 
+    //     fades in for 1 cycle
+    //     stays for 2 cycles
+    //     fades out for 1 cycle
+    //     stays out for 2 cycles
+    var cycle_length = 255/6;
+    var cycle1 = cycle_length * 1;
+    var cycle2 = cycle_length * 2;
+    var cycle3 = cycle_length * 3;
+    var cycle4 = cycle_length * 4;
+    var cycle5 = cycle_length * 5;
+console.log('cycles: ', cycle1, cycle2, cycle3, cycle4, cycle5, cycle6);
+    var cycle6 = cycle_length * 6;
+    if(position < cycle1){
+        // CYCLE 1
+        var offset = position;
+        console.log('position', position, "cycle1", cycle1, "offset", offset, "calculated", offset * 6);
+        return rgb(255, 'fade_in', 0);
+    }else if(cycle1 < position && position < cycle2){
+        // CYCLE 2
+        var offset = position - Math.floor(cycle1);
+        console.log('position', position, "cycle2", cycle2, "offset", offset, "calculated", offset * 6);
+        return rgb('fade_out', 255, 0);
+    }else if(cycle2 < position && position < cycle3){
+        // CYCLE 3
+        var offset = position - Math.floor(cycle2);
+        console.log('position', position, "cycle3", cycle3, "offset", offset, "calculated", offset * 6);
+        return rgb(0, 255, 'fade_in');
+    }else if(cycle3 < position && position < cycle4){
+        // CYCLE 4
+        var offset = position - Math.floor(cycle3);
+        console.log('position', position, "cycle4", cycle4, "offset", offset, "calculated", offset * 6);
+        return rgb(0, 'fade_out', 255);
+    }else if(cycle4 < position && position < cycle5){
+        // CYCLE 5
+        var offset = position - Math.floor(cycle4);
+        console.log('position', position, "cycle5", cycle5, "offset", offset, "calculated", offset * 6);
+        return rgb('fade_in', 0, 255);
+    }else if(cycle5 < position && position < cycle6){
+        // CYCLE 6
+        var offset = position - Math.floor(cycle5);
+        console.log('position', position, "cycle6", cycle6, "offset", offset, "calculated", offset * 6);
+        return rgb(255, 0, 'fade_out');
+    }
+
+    wheelPos = 255 - wheelPos;
+    if(wheelPos < 85) {
+        return rgb(255 - wheelPos * 3, 0, wheelPos * 3);
+    } else if(wheelPos < 170) {
+        wheelPos -= 85;
+        return rgb(0, wheelPos * 3, 255 - wheelPos * 3);
+    } else {
+        wheelPos -= 170;
+        return rgb(wheelPos * 3, 255 - wheelPos * 3, 0);
     }
 }
 
