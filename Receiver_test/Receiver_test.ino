@@ -5,6 +5,41 @@
 #include <avr/power.h>
 //#include "printf.h"
 
+#define MSG_ADDR      msg[0]
+#define MSG_UNUSED01  msg[1]
+#define MSG_CMD       msg[2]
+#define MSG_MOD1      msg[3]
+#define MSG_MOD2      msg[4]
+#define MSG_MOD3      msg[5]
+#define MSG_MOD4      msg[6]
+#define MSG_UNUSED02  msg[7]
+#define MSG_UNUSED03  msg[8]
+#define MSG_UNUSED04  msg[9]
+#define MSG_UNUSED05  msg[10]
+#define MSG_UNUSED06  msg[11]
+#define MSG_UNUSED07  msg[12]
+#define MSG_UNUSED08  msg[13]
+#define MSG_LED1R     msg[14]
+#define MSG_LED1G     msg[15]
+#define MSG_LED1B     msg[16]
+#define MSG_UNUSED12  msg[17]
+#define MSG_UNUSED13  msg[18]
+#define MSG_LED2R     msg[19]
+#define MSG_LED2G     msg[20]
+#define MSG_LED2B     msg[21]
+#define MSG_UNUSED17  msg[22]
+#define MSG_UNUSED18  msg[23]
+#define MSG_LED3R     msg[24]
+#define MSG_LED3G     msg[25]
+#define MSG_LED3B     msg[26]
+#define MSG_UNUSED22  msg[27]
+#define MSG_UNUSED23  msg[28]
+#define MSG_LED4R     msg[29]
+#define MSG_LED4G     msg[30]
+#define MSG_LED4B     msg[31]
+
+
+
 #define PIN 6
 
 // Parameter 1 = number of pixels in strip
@@ -66,9 +101,9 @@ void loop(void){
 
       case 0:  // display r, g and b from master
         while(!done){
-          red = msg[14];
-          green = msg[15];
-          blue = msg[16];
+          red = MSG_LED1R;
+          green = MSG_LED1G;
+          blue = MSG_LED1B;
           strip.setPixelColor(0, strip.Color(red, green, blue));
           strip.setPixelColor(1, strip.Color(red, green, blue));
           strip.setPixelColor(2, strip.Color(red, green, blue));
@@ -158,22 +193,22 @@ uint32_t Wheel(byte WheelPos) {
 bool check_radio(void){
   if (radio.available()){
     timeout = millis() + 10000;
-    if (msg[1] == 0 || msg[1] == addr){
+    if (MSG_ADDR == 0 || MSG_ADDR == addr){
       return true;
     }
     // for safety reset msg target to a value that matches no lantern
-    msg[1] = 255;
+    MSG_ADDR = 255;
     return false;
   }
 }
 
 bool process_msg(void){
   radio.read(msg, 32);
-  byte cmnd = msg[2];
+  byte cmnd = MSG_CMD;
   switch (cmnd){
     case 'P':    // set pattern number
-      if (msg[3] != pattern){  // new pattern
-        pattern = msg[3];
+      if (MSG_MOD1 != pattern){  // new pattern
+        pattern = MSG_MOD1;
         return true;
       }
       else{
@@ -181,7 +216,7 @@ bool process_msg(void){
       }
       break;
     case 'S':    // set speed of the pattern
-      rate = msg[3];
+      rate = MSG_MOD1;
       return false;
       break;
     default:
