@@ -222,6 +222,7 @@ function render(colors){
 function animation(){
     var frame = animation.generator.next();
     render({value: frame.colors});
+    console.log(frame);
     if(animation.action == 'play'){
         setTimeout(animation, frame.duration);
     }
@@ -333,11 +334,10 @@ generators['Rainbow Generator'] = function(){
 
 generators['Rainbow Generator 2'] = function(){
     // NOTE: This uses the neopixel wheel function.
-    // It doesn't produce true yellow because the 3 channel fade cross in the middle.
-    // I am working on a solution to this in "Rainbow Generator 3".
+    // It doesn't produce true yellow because the 2 channel fade crosses in the middle.
+    // The solution to this is in "Rainbow Generator 3".
     this.index = 0;
     this.start = 0;
-console.log('setting index to 0.');
     this.next = function(){
         var out = "";
         var color = "";
@@ -350,8 +350,6 @@ console.log('setting index to 0.');
             color = wheel(points[i]);
             out = out + color+color+color+color;
         }
-console.log(points);
-console.log(this.index, out);
         if(this.index < number_of_lanterns){
             this.index = this.index + 1;
         }else{
@@ -363,12 +361,11 @@ console.log(this.index, out);
 }
 
 generators['Rainbow Generator 3'] = function(){
-    // NOTE: This is a work in progress.
-    // The 6 phase wheel2 function is not ready yet, so this will fail.
+    // NOTE: This is identical to "Rainbow Generator 2" except that it uses wheel2.
+    // The 6 phase wheel2 function maintains maximum saturation.
     // See "Rainbow Generator 2" for more details.
     this.index = 0;
     this.start = 0;
-console.log('setting index to 0.');
     this.next = function(){
         var out = "";
         var color = "";
@@ -381,15 +378,13 @@ console.log('setting index to 0.');
             color = wheel2(points[i]);
             out = out + color+color+color+color;
         }
-console.log(points);
-console.log(this.index, out);
         if(this.index < number_of_lanterns){
             this.index = this.index + 1;
         }else{
             this.index = 0;
             this.start = (this.start < 255 - 16) ? this.start + 16 : 0;
         }
-        return {duration: 250, colors: out};
+        return {duration: 10, colors: out};
     }
 }
 
@@ -420,54 +415,48 @@ function wheel2(position){
     //     fades out for 1 cycle
     //     stays out for 2 cycles
     var cycle_length = 255/6;
-    var cycle1 = cycle_length * 1;
-    var cycle2 = cycle_length * 2;
-    var cycle3 = cycle_length * 3;
-    var cycle4 = cycle_length * 4;
-    var cycle5 = cycle_length * 5;
-console.log('cycles: ', cycle1, cycle2, cycle3, cycle4, cycle5, cycle6);
-    var cycle6 = cycle_length * 6;
+    var cycle1 = cycle_length * 1; //  42.5
+    var cycle2 = cycle_length * 2; //  85
+    var cycle3 = cycle_length * 3; // 127.5
+    var cycle4 = cycle_length * 4; // 170
+    var cycle5 = cycle_length * 5; // 212.5
+    var cycle6 = cycle_length * 6; // 255
     if(position < cycle1){
         // CYCLE 1
         var offset = position;
-        console.log('position', position, "cycle1", cycle1, "offset", offset, "calculated", offset * 6);
-        return rgb(255, 'fade_in', 0);
-    }else if(cycle1 < position && position < cycle2){
+        var calculated = offset * 6;
+        if(calculated < 0 || calculated > 255){ debugger; }
+        return rgb(255, calculated, 0);
+    }else if(cycle1 <= position && position < cycle2){
         // CYCLE 2
-        var offset = position - Math.floor(cycle1);
-        console.log('position', position, "cycle2", cycle2, "offset", offset, "calculated", offset * 6);
-        return rgb('fade_out', 255, 0);
-    }else if(cycle2 < position && position < cycle3){
+        var offset = position - Math.ceil(cycle1);
+        var calculated = 255 - offset * 6;
+        if(calculated < 0 || calculated > 255){ debugger; }
+        return rgb(calculated, 255, 0);
+    }else if(cycle2 <= position && position < cycle3){
         // CYCLE 3
         var offset = position - Math.floor(cycle2);
-        console.log('position', position, "cycle3", cycle3, "offset", offset, "calculated", offset * 6);
-        return rgb(0, 255, 'fade_in');
-    }else if(cycle3 < position && position < cycle4){
+        var calculated = offset * 6;
+        if(calculated < 0 || calculated > 255){ debugger; }
+        return rgb(0, 255, calculated);
+    }else if(cycle3 <= position && position < cycle4){
         // CYCLE 4
-        var offset = position - Math.floor(cycle3);
-        console.log('position', position, "cycle4", cycle4, "offset", offset, "calculated", offset * 6);
-        return rgb(0, 'fade_out', 255);
-    }else if(cycle4 < position && position < cycle5){
+        var offset = position - Math.ceil(cycle3);
+        var calculated = 255 - offset * 6;
+        if(calculated < 0 || calculated > 255){ debugger; }
+        return rgb(0, calculated, 255);
+    }else if(cycle4 <= position && position < cycle5){
         // CYCLE 5
         var offset = position - Math.floor(cycle4);
-        console.log('position', position, "cycle5", cycle5, "offset", offset, "calculated", offset * 6);
-        return rgb('fade_in', 0, 255);
-    }else if(cycle5 < position && position < cycle6){
+        var calculated = offset * 6;
+        if(calculated < 0 || calculated > 255){ debugger; }
+        return rgb(calculated, 0, 255);
+    }else{
         // CYCLE 6
-        var offset = position - Math.floor(cycle5);
-        console.log('position', position, "cycle6", cycle6, "offset", offset, "calculated", offset * 6);
-        return rgb(255, 0, 'fade_out');
-    }
-
-    wheelPos = 255 - wheelPos;
-    if(wheelPos < 85) {
-        return rgb(255 - wheelPos * 3, 0, wheelPos * 3);
-    } else if(wheelPos < 170) {
-        wheelPos -= 85;
-        return rgb(0, wheelPos * 3, 255 - wheelPos * 3);
-    } else {
-        wheelPos -= 170;
-        return rgb(wheelPos * 3, 255 - wheelPos * 3, 0);
+        var offset = position - Math.ceil(cycle5);
+        var calculated = 255 - offset * 6;
+        if(calculated < 0 || calculated > 255){ debugger; }
+        return rgb(255, 0, calculated);
     }
 }
 
