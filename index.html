@@ -222,7 +222,6 @@ function render(colors){
 function animation(){
     var frame = animation.generator.next();
     render({value: frame.colors});
-    console.log(frame);
     if(animation.action == 'play'){
         setTimeout(animation, frame.duration);
     }
@@ -414,49 +413,24 @@ function wheel2(position){
     //     stays for 2 cycles
     //     fades out for 1 cycle
     //     stays out for 2 cycles
-    var cycle_length = 255/6;
-    var cycle1 = cycle_length * 1; //  42.5
-    var cycle2 = cycle_length * 2; //  85
-    var cycle3 = cycle_length * 3; // 127.5
-    var cycle4 = cycle_length * 4; // 170
-    var cycle5 = cycle_length * 5; // 212.5
-    var cycle6 = cycle_length * 6; // 255
-    if(position < cycle1){
+    if(position < 43){
         // CYCLE 1
-        var offset = position;
-        var calculated = offset * 6;
-        if(calculated < 0 || calculated > 255){ debugger; }
-        return rgb(255, calculated, 0);
-    }else if(cycle1 <= position && position < cycle2){
+        return rgb(255, position * 6, 0);
+    }else if(43 <= position && position < 85){
         // CYCLE 2
-        var offset = position - Math.ceil(cycle1);
-        var calculated = 255 - offset * 6;
-        if(calculated < 0 || calculated > 255){ debugger; }
-        return rgb(calculated, 255, 0);
-    }else if(cycle2 <= position && position < cycle3){
+        return rgb(255 - (position - 43) * 6, 255, 0);
+    }else if(85 <= position && position < 128){
         // CYCLE 3
-        var offset = position - Math.floor(cycle2);
-        var calculated = offset * 6;
-        if(calculated < 0 || calculated > 255){ debugger; }
-        return rgb(0, 255, calculated);
-    }else if(cycle3 <= position && position < cycle4){
+        return rgb(0, 255, (position - 85) * 6);
+    }else if(128 <= position && position < 170){
         // CYCLE 4
-        var offset = position - Math.ceil(cycle3);
-        var calculated = 255 - offset * 6;
-        if(calculated < 0 || calculated > 255){ debugger; }
-        return rgb(0, calculated, 255);
-    }else if(cycle4 <= position && position < cycle5){
+        return rgb(0, 255 - (position - 128) * 6, 255);
+    }else if(170 <= position && position < 213){
         // CYCLE 5
-        var offset = position - Math.floor(cycle4);
-        var calculated = offset * 6;
-        if(calculated < 0 || calculated > 255){ debugger; }
-        return rgb(calculated, 0, 255);
+        return rgb((position - 170) * 6, 0, 255);
     }else{
         // CYCLE 6
-        var offset = position - Math.ceil(cycle5);
-        var calculated = 255 - offset * 6;
-        if(calculated < 0 || calculated > 255){ debugger; }
-        return rgb(255, 0, calculated);
+        return rgb(255, 0, 255 - (position - 213) * 6);
     }
 }
 
