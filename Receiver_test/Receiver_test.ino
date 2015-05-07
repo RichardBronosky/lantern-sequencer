@@ -158,19 +158,11 @@ uint32_t Wheel(byte WheelPos) {
 bool check_radio(void){
   if (radio.available()){
     timeout = millis() + 10000;
-    if (msg[1] == 0){
+    if (msg[1] == 0 || msg[1] == addr){
       return true;
     }
-    else if (msg[1] == addr){
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  }
-  else
-  {
+    // for safety reset msg target to a value that matches no lantern
+    msg[1] = 255;
     return false;
   }
 }
