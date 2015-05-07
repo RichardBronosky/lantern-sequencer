@@ -110,7 +110,7 @@ void loop(void){
           strip.setPixelColor(3, strip.Color(red, green, blue));
           strip.show();
           //delay(rate);
-          if(check_radio()){done = process_msg();}
+          done = process_msg();
           if (millis() > timeout){
             timeout = millis()+60000;
             pattern = 2;
@@ -138,7 +138,7 @@ void loop(void){
             strip.show();
           }
           n++;
-          if(check_radio()){done = process_msg();}
+          done = process_msg();
           if (millis() > timeout){
             timeout = millis()+60000;
             pattern = 2;
@@ -157,7 +157,7 @@ void loop(void){
           strip.show();
           delay(rate);
           n++;
-          if(check_radio()){done = process_msg();}
+          done = process_msg();
           if (millis() > timeout){
             timeout = millis()+60000;
             pattern = 2;
@@ -203,9 +203,11 @@ bool check_radio(void){
 }
 
 bool process_msg(void){
+  if(check_radio() != true){
+    return false;
+  }
   radio.read(msg, 32);
-  byte cmnd = MSG_CMD;
-  switch (cmnd){
+  switch (MSG_CMD){
     case 'P':    // set pattern number
       if (MSG_MOD1 != pattern){  // new pattern
         pattern = MSG_MOD1;
