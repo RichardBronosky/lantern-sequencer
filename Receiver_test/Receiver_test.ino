@@ -67,25 +67,6 @@ unsigned long timeout;
 const uint64_t pipe = 0xE8E8F0F0E1LL;
 RF24 radio(9,10);
 
-void setup(void){
-  digitalWrite(10,HIGH);
-  addr = 0;
-  Serial.begin(57600);
-  //  printf_begin();
-
-  radio.begin();
-  radio.setAutoAck(0);
-  //  radio.printDetails();
-  radio.openReadingPipe(1,pipe);
-  radio.startListening();
-
-  strip.begin();
-  strip.show(); // Initialize all pixels to 'off'
-
-  timeout = millis() + 10000;
-
-}
-
 void error(void){
   while(1){
     red = 40;
@@ -111,6 +92,7 @@ void error(void){
 }
 
 void set_addr(){
+  addr = 0;
   int buttonPin = 0;
   int affirmative = HIGH;
   int buttonState;             // the current reading from the input pin
@@ -124,6 +106,7 @@ void set_addr(){
 
   pinMode(buttonPin, INPUT);
   if(digitalRead(buttonPin) == affirmative){
+    // Set addr
     red = 255;
     green = 255;
     blue = 255;
@@ -141,10 +124,7 @@ void set_addr(){
 
       if ((millis() - lastDebounceTime) > setDelay && reading == affirmative) {
         //    addr = 8;
-        EEPROM.write(0, addr);
-        EEPROM.write(1, addr);
-        EEPROM.write(2, addr);
-        EEPROM.write(3, addr);
+        for(int i=0; i<4; i++){ EEPROM.write(i, addr); }
         red = 255;
         green = 255;
         blue = 255;
@@ -188,23 +168,36 @@ void set_addr(){
       }
       lastButtonState = reading;
     }
+  }else{
+    // Get addr
+    byte buff;
+    addr = EEPROM.read(0);
+    for(int i=1; i<4; i++){
+      buff = EEPROM.read(i);
+      if( addr != buff){ error(); }
+    }
   }
 }
 
-void get_addr(){
-  byte buff;
-  addr = EEPROM.read(0);
-  buff = EEPROM.read(1);
-  if( addr != buff){ error(); }
-  buff = EEPROM.read(2);
-  if( addr != buff){ error(); }
-  buff = EEPROM.read(3);
-  if( addr != buff){ error(); }
+void setup(void){
+  Serial.begin(57600);
+  //  printf_begin();
+
+  radio.begin();
+  radio.setAutoAck(0);
+  //  radio.printDetails();
+  radio.openReadingPipe(1,pipe);
+  radio.startListening();
+
+  strip.begin();
+  strip.show(); // Initialize all pixels to 'off'
+
+  timeout = millis() + 10000;
+
+  set_addr();
 }
 
 void loop(void){
-  set_addr();
-  get_addr();
   bool done;
   byte n;
   byte i;
@@ -311,7 +304,6 @@ uint32_t Wheel(byte WheelPos) {
 }
 
 bool check_radio(void){
-  Serial.println(addr);
   if (radio.available()){
     timeout = millis() + 10000;
     if (MSG_ADDR == 0 || MSG_ADDR == addr){
