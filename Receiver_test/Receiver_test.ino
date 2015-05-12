@@ -1,3 +1,4 @@
+#include <EEPROM.h>
 #include <SPI.h>
 #include "nRF24L01.h"
 #include "RF24.h"
@@ -55,7 +56,7 @@ byte msg[32];
 byte pattern = 1;
 byte rate = 10;
 
-const byte addr = 8;
+byte addr;
 
 unsigned int red;
 unsigned int green;
@@ -67,7 +68,8 @@ const uint64_t pipe = 0xE8E8F0F0E1LL;
 RF24 radio(9,10);
 
 void setup(void){
-
+  digitalWrite(10,HIGH);
+  addr = 0;
   Serial.begin(57600);
   //  printf_begin();
 
@@ -84,7 +86,123 @@ void setup(void){
 
 }
 
+void error(void){
+  while(1){
+    red = 40;
+    green = 0;
+    blue = 0;
+    strip.setPixelColor(0, strip.Color(green, red, blue));
+    strip.setPixelColor(1, strip.Color(green, red, blue));
+    strip.setPixelColor(2, strip.Color(green, red, blue));
+    strip.setPixelColor(3, strip.Color(green, red, blue));
+    strip.show();
+    delay(500);
+    red = 0;
+    green = 0;
+    blue = 2;
+    strip.setPixelColor(0, strip.Color(green, red, blue));
+    strip.setPixelColor(1, strip.Color(green, red, blue));
+    strip.setPixelColor(2, strip.Color(green, red, blue));
+    strip.setPixelColor(3, strip.Color(green, red, blue));
+    strip.show();
+    delay(500);
+  }
+
+}
+
+void set_addr(){
+  int buttonPin = 0;
+  int ledPin = 14;
+  int affirmative = HIGH;
+  int buttonState;             // the current reading from the input pin
+  int ledState = HIGH;         // the current state of the output pin
+  int lastButtonState = affirmative;   // the previous reading from the input pin
+
+  // the following variables are long's because the time, measured in miliseconds,
+  // will quickly become a bigger number than can be stored in an int.
+  long lastDebounceTime = 0;  // the last time the output pin was toggled
+  long debounceDelay = 50;    // the debounce time; increase if the output flickers
+
+  pinMode(buttonPin, INPUT);
+  if(digitalRead(buttonPin) == affirmative){
+    red = 255;
+    green = 255;
+    blue = 255;
+    for(int i=0; i<4; i++){ strip.setPixelColor(i, strip.Color(green, red, blue)); }
+    strip.show();
+    bool prgm = true;
+    while(prgm){
+      int reading = digitalRead(buttonPin);
+    
+      // If the switch changed, due to noise or pressing:
+      if (reading != lastButtonState) {
+        // reset the debouncing timer
+        lastDebounceTime = millis();
+      }
+
+      if ((millis() - lastDebounceTime) > debounceDelay) {
+        if (reading != buttonState) {
+          buttonState = reading;
+    
+          // only toggle the LED if the new button state is HIGH
+          if (buttonState == affirmative) {
+            ledState = !ledState;
+            switch(addr / 4){
+              case 0:
+                red = 255;
+                green = 0;
+                blue = 0;
+                break;
+              case 1:
+                red = 255;
+                green = 80;
+                blue = 0;
+                break;
+              case 2:
+                red = 0;
+                green = 255;
+                blue = 0;
+                break;
+              case 3:
+                red = 0;
+                green = 0;
+                blue = 255;
+                break;
+              default:
+                error();
+            }
+            strip.setPixelColor(addr % 4, strip.Color(green, red, blue));
+            strip.show();
+            addr++;
+          }
+        }
+      }
+      digitalWrite(ledPin, ledState);
+      lastButtonState = reading;
+    }
+
+//    addr = 8;
+    EEPROM.write(0, addr);
+    EEPROM.write(1, addr);
+    EEPROM.write(2, addr);
+    EEPROM.write(3, addr);
+  }else{ error(); }
+}
+
+void get_addr(){
+  byte buff;
+  addr = EEPROM.read(0);
+  buff = EEPROM.read(1);
+  if( addr != buff){ error(); }
+  buff = EEPROM.read(2);
+  if( addr != buff){ error(); }
+  buff = EEPROM.read(3);
+  if( addr != buff){ error(); }
+}
+
 void loop(void){
+  set_addr();
+  get_addr();
   bool done;
   byte n;
   byte i;
