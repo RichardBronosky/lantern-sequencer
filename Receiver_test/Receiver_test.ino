@@ -159,7 +159,7 @@ void loop(void){
       case 2:  // rainbow rotating around
         n = (addr-1) * 16;
         while(!done){
-          setLantern(Wheel((64 + n) & 255));
+          setLantern(SmoothWheel((64 + n) & 255));
           delay(rate);
           n++;
           done = process_msg();
@@ -182,7 +182,7 @@ void loop(void){
 
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
-uint32_t Wheel(byte WheelPos){
+uint32_t SmoothWheel(byte WheelPos){
   WheelPos = 255 - WheelPos;
   if(WheelPos < 85){
     return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
@@ -192,6 +192,27 @@ uint32_t Wheel(byte WheelPos){
   }else{
     WheelPos -= 170;
     return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+  }
+}
+
+uint32_t BrightWheel(byte WheelPos){
+  // 6 phases for each color
+  //     fades in for 1 cycle
+  //     stays for 2 cycles
+  //     fades out for 1 cycle
+  //     stays out for 2 cycles
+  if(WheelPos < 43){
+    return strip.Color(255, WheelPos * 6, 0);
+  }else if(43 <= WheelPos && WheelPos < 85){
+    return strip.Color(255 - (WheelPos - 43) * 6, 255, 0);
+  }else if(85 <= WheelPos && WheelPos < 128){
+    return strip.Color(0, 255, (WheelPos - 85) * 6);
+  }else if(128 <= WheelPos && WheelPos < 170){
+    return strip.Color(0, 255 - (WheelPos - 128) * 6, 255);
+  }else if(170 <= WheelPos && WheelPos < 213){
+    return strip.Color((WheelPos - 170) * 6, 0, 255);
+  }else{
+    return strip.Color(255, 0, 255 - (WheelPos - 213) * 6);
   }
 }
 
