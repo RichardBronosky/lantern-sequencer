@@ -66,22 +66,45 @@ unsigned long timeout;
 const uint64_t pipe = 0xE8E8F0F0E1LL;
 RF24 radio(9,10);
 
-void setup(void){
-
+void setupRadio(void){
   Serial.begin(57600);
-  //  printf_begin();
-
   radio.begin();
   radio.setAutoAck(0);
   //  radio.printDetails();
   radio.openReadingPipe(1,pipe);
   radio.startListening();
+}
 
+void setupLantern(void){
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
+}
 
+void setLantern(uint32_t c){
+  for(uint16_t n=0; n < strip.numPixels(); n++){
+    setLED(n, c);
+  }
+}
+
+void setLantern(uint8_t r, uint8_t g, uint8_t b){
+    setLantern(strip.Color(r, g, b));
+}
+
+void setLED(uint16_t n, uint32_t c){
+  strip.setPixelColor(n, c);
+  if(n == strip.numPixels()-1){
+    strip.show();
+  }
+}
+
+void setLED(uint16_t n, uint8_t r, uint8_t g, uint8_t b){
+  setLED(n, strip.Color(r, g, b));
+}
+
+void setup(void){
+  setupRadio();
+  setupLantern();
   timeout = millis() + 10000;
-
 }
 
 void loop(void){
@@ -89,29 +112,24 @@ void loop(void){
   byte n;
   byte i;
 
-  strip.setPixelColor(0, strip.Color(255,0,0));
-  strip.setPixelColor(1, strip.Color(0,255,0));
-  strip.setPixelColor(2, strip.Color(0,0,255));
-  strip.setPixelColor(3, strip.Color(0,255,255));
-  strip.show();
+  setLED(0, 255, 0, 0);
+  setLED(1, 0, 255, 0);
+  setLED(2, 0, 0, 255);
+  setLED(3, 0, 255, 255);
 
   while(1){
     done = false;
-    switch (pattern){
+    switch(pattern){
 
       case 0:  // display r, g and b from master
         while(!done){
           red = MSG_LED1R;
           green = MSG_LED1G;
           blue = MSG_LED1B;
-          strip.setPixelColor(0, strip.Color(red, green, blue));
-          strip.setPixelColor(1, strip.Color(red, green, blue));
-          strip.setPixelColor(2, strip.Color(red, green, blue));
-          strip.setPixelColor(3, strip.Color(red, green, blue));
-          strip.show();
+          setLantern(red, green, blue);
           //delay(rate);
           done = process_msg();
-          if (millis() > timeout){
+          if(millis() > timeout){
             timeout = millis()+60000;
             pattern = 2;
             done = true;
@@ -121,25 +139,15 @@ void loop(void){
 
       case 1:  // color rotating around circle
         n = (addr-1) * 16;
-        while (!done){
-          if (n<16){
-            strip.setPixelColor(0, strip.Color(255,0,0));
-            strip.setPixelColor(1, strip.Color(255,0,0));
-            strip.setPixelColor(2, strip.Color(255,0,0));
-            strip.setPixelColor(3, strip.Color(255,0,0));
-            strip.show();
-          }
-          else
-          {
-            strip.setPixelColor(0, strip.Color(0,0,255));
-            strip.setPixelColor(1, strip.Color(0,0,255));
-            strip.setPixelColor(2, strip.Color(0,0,255));
-            strip.setPixelColor(3, strip.Color(0,0,255));
-            strip.show();
+        while(!done){
+          if(n<16){
+            setLantern(255,0,0);
+          }else{
+            setLantern(0,0,255);
           }
           n++;
           done = process_msg();
-          if (millis() > timeout){
+          if(millis() > timeout){
             timeout = millis()+60000;
             pattern = 2;
             done = true;
@@ -150,15 +158,12 @@ void loop(void){
 
       case 2:  // rainbow rotating around
         n = (addr-1) * 16;
-        while (!done){
-          for(i=0; i< strip.numPixels(); i++) {
-            strip.setPixelColor(i, Wheel((64 + n) & 255));
-          }
-          strip.show();
+        while(!done){
+          setLantern(Wheel((64 + n) & 255));
           delay(rate);
           n++;
           done = process_msg();
-          if (millis() > timeout){
+          if(millis() > timeout){
             timeout = millis()+60000;
             pattern = 2;
             done = true;
@@ -177,23 +182,23 @@ void loop(void){
 
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
-uint32_t Wheel(byte WheelPos) {
+uint32_t Wheel(byte WheelPos){
   WheelPos = 255 - WheelPos;
-  if(WheelPos < 85) {
+  if(WheelPos < 85){
     return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  } else if(WheelPos < 170) {
+  }else if(WheelPos < 170){
     WheelPos -= 85;
     return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  } else {
+  }else{
     WheelPos -= 170;
     return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
   }
 }
 
 bool check_radio(void){
-  if (radio.available()){
+  if(radio.available()){
     timeout = millis() + 10000;
-    if (MSG_ADDR == 0 || MSG_ADDR == addr){
+    if(MSG_ADDR == 0 || MSG_ADDR == addr){
       return true;
     }
     // for safety reset msg target to a value that matches no lantern
@@ -207,9 +212,9 @@ bool process_msg(void){
     return false;
   }
   radio.read(msg, 32);
-  switch (MSG_CMD){
+  switch(MSG_CMD){
     case 'P':    // set pattern number
-      if (MSG_MOD1 != pattern){  // new pattern
+      if(MSG_MOD1 != pattern){  // new pattern
         pattern = MSG_MOD1;
         return true;
       }
