@@ -177,19 +177,19 @@ void loop(void){
         while(!done){
           if(random(1,17) == addr){ //the random number matches exactly 1 lantern each time
             red = 255;
-            blue = 255;
             green = 255;
+            blue = 255;
           }else{
             red = 0;
-            blue = 0;
             green = 0;
+            blue = 0;
           }
-          setLantern(red, blue, green);
-          delay(5);
+          setLantern(green, red, blue);
+          delay(5); // short wait independant of rate because it is a strobe
           red = 0;
           blue = 0;
           green = 0;
-          setLantern(red, blue, green);
+          setLantern(green, red, blue);
           delay(rate * 10); // wait longer so they don't all blend together
           done = process_msg();
           if(millis() > timeout){
