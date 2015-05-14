@@ -52,7 +52,7 @@
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(4, PIN, NEO_GRB + NEO_KHZ800);
 
 byte msg[32];
-byte pattern = 3;
+byte pattern = 4;
 byte rate = 10;
 
 const byte addr = 8;
@@ -160,7 +160,6 @@ void loop(void){
         n = (addr-1) * 16;
         while(!done){
           setLantern(SmoothWheel((64 + n) & 255));
-          delay(rate);
           n++;
           done = process_msg();
           if(millis() > timeout){
@@ -194,10 +193,45 @@ void loop(void){
           done = process_msg();
           if(millis() > timeout){
             timeout = millis()+60000;
-            pattern = 3;
+            pattern = 4;
             done = true;
           }
           delay(rate);
+        }
+        break;
+
+      case 4:  // fire flies
+        randomSeed(0); //every lantern gets the same random number
+        n = (addr-1) * 4;
+        i = random(1,17);
+        while(!done){
+          if(i == addr){ //the random number matches exactly 1 lantern each time
+            if(n<128){
+              red = 0;
+              green = 255 * n/128;
+              blue = 32 * n/128;
+            }else{
+              red = 0;
+              green = 255 * (256-n)/128;
+              blue = 32 * (256-n)/128;
+            }
+          }else{
+            red = 0;
+            green = 0;
+            blue = 0;
+          }
+          setLantern(green, red, blue);
+          delay(rate); // wait longer so they don't all blend together
+          done = process_msg();
+          if(millis() > timeout){
+            timeout = millis()+60000;
+            pattern = 4;
+            done = true;
+          }
+          n++;
+          if(n == 0){
+            i = random(1,17);
+          }
         }
         break;
 
