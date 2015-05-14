@@ -52,7 +52,7 @@
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(4, PIN, NEO_GRB + NEO_KHZ800);
 
 byte msg[32];
-byte pattern = 1;
+byte pattern = 3;
 byte rate = 10;
 
 const byte addr = 8;
@@ -165,7 +165,36 @@ void loop(void){
           done = process_msg();
           if(millis() > timeout){
             timeout = millis()+60000;
-            pattern = 2;
+            pattern = 3;
+            done = true;
+          }
+          delay(rate);
+        }
+        break;
+
+      case 3:  // paparazzi
+        randomSeed(0); //every lantern gets the same random number
+        while(!done){
+          if(random(1,17) == addr){ //the random number matches exactly 1 lantern each time
+            red = 255;
+            blue = 255;
+            green = 255;
+          }else{
+            red = 0;
+            blue = 0;
+            green = 0;
+          }
+          setLantern(red, blue, green);
+          delay(5);
+          red = 0;
+          blue = 0;
+          green = 0;
+          setLantern(red, blue, green);
+          delay(rate * 10); // wait longer so they don't all blend together
+          done = process_msg();
+          if(millis() > timeout){
+            timeout = millis()+60000;
+            pattern = 3;
             done = true;
           }
           delay(rate);
